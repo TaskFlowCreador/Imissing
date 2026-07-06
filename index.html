@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para ti con cariño 💖</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 25% 15%, rgba(220,38,38,0.16) 0%, transparent 45%), radial-gradient(circle at 80% 85%, rgba(37,99,235,0.18) 0%, transparent 50%), radial-gradient(circle at center, #0a0a0d 0%, #000000 100%);
+            overflow-x: hidden;
+        }
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+        .font-korean {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        /* Scrollbar suave para la letra */
+        .lyrics-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .lyrics-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .lyrics-scroll::-webkit-scrollbar-thumb {
+            background: rgba(220, 38, 38, 0.28);
+            border-radius: 10px;
+        }
+        /* Máscara de desvanecimiento para la letra activa */
+        .lyrics-container {
+            position: relative;
+            mask-image: linear-gradient(to bottom, transparent, white 15%, white 85%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, white 15%, white 85%, transparent);
+        }
+        
+        /* Animaciones para el sobre en 3D */
+        .envelope-wrapper {
+            perspective: 1000px;
+        }
+        .envelope {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1s ease;
+        }
+
+        /* DISEÑO DE LA CARTA (Totalmente contenida y oculta al inicio) */
+        .letter {
+            transform: translateY(0px) scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1) 0.5s, opacity 0.8s ease 0.5s;
+            z-index: 10;
+        }
+        /* Cuando el sobre se abre, se eleva limpiamente y se posiciona al frente */
+        #envelope-container.open .letter {
+            transform: translateY(-145px) scale(1.05);
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 50; /* Se posiciona encima del cuerpo del sobre para que no lo tape nada */
+        }
+        #envelope-container.open #flap {
+            transform: rotateX(180deg);
+            z-index: 5; /* Se oculta detrás de la carta */
+        }
+
+        /* Animación del disco de vinilo */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spinning {
+            animation: spin 18s linear infinite;
+        }
+        .paused-spin {
+            animation-play-state: paused;
+        }
+        
+        /* Estilos base de las líneas del karaoke */
+        .lyric-line {
+            transition: all 0.4s ease;
+            opacity: 0.35;
+            transform: scale(0.95);
+        }
+        .lyric-line.active {
+            transform: scale(1.04);
+            opacity: 1;
+        }
+
+        /* EFECTO DE PINTADO NATIVO SOBRE UN ÚNICO TEXTO */
+        .paint-text {
+            background-image: linear-gradient(to right, #ef4444 var(--paint-progress, 0%), rgba(255, 255, 255, 0.3) var(--paint-progress, 0%));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline;
+        }
+        .paint-text-rm {
+            background-image: linear-gradient(to right, #3b82f6 var(--paint-progress, 0%), rgba(147, 197, 253, 0.2) var(--paint-progress, 0%));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline;
+        }
+        .paint-text-es {
+            background-image: linear-gradient(to right, #f8fafc var(--paint-progress, 0%), rgba(255, 255, 255, 0.15) var(--paint-progress, 0%));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline;
+        }
+
+        /* Pulso romántico */
+        @keyframes pulse-soft {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 12px rgba(220, 38, 38, 0.7)); }
+        }
+        .pulse-heart {
+            animation: pulse-soft 2s infinite ease-in-out;
+        }
+
+        /* Animación del ecualizador del track activo en playlist */
+        @keyframes eq-pulse {
+            0%, 100% { height: 4px; }
+            50% { height: 16px; }
+        }
+        .eq-bar-1 { animation: eq-pulse 0.6s infinite ease-in-out alternate; }
+        .eq-bar-2 { animation: eq-pulse 0.8s infinite ease-in-out alternate 0.15s; }
+        .eq-bar-3 { animation: eq-pulse 0.5s infinite ease-in-out alternate 0.3s; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-white relative">
+
+    <!-- Canvas de Corazones Flotantes -->
+    <canvas id="heartCanvas" class="absolute inset-0 pointer-events-auto z-0"></canvas>
+
+    <!-- Header Sutil -->
+    <header class="w-full text-center py-6 px-6 z-10 select-none">
+        <p class="text-xs uppercase tracking-[0.3em] text-red-400 opacity-80 font-semibold">Un regalo especial desde el corazón</p>
+    </header>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="flex-grow flex items-center justify-center px-4 md:px-8 z-10 w-full max-w-6xl mx-auto my-6">
+
+        <!-- ================= PANTALLA 1: EL SOBRE Y LA CARTA ================= -->
+        <div id="letter-screen" class="w-full flex flex-col items-center justify-center transition-all duration-700">
+            <p id="hint-text" class="text-red-300/80 text-sm mb-6 font-serif animate-pulse text-center">Toca el sello de corazón rojo para abrir tu sorpresa...</p>
+            
+            <!-- Contenedor Seguro del Sobre -->
+            <div class="relative w-[320px] h-[300px] flex items-center justify-center select-none">
+                <div id="envelope-container" class="relative w-[320px] h-[220px]">
+                    <!-- Solapa Trasera -->
+                    <div class="absolute bottom-0 left-0 w-full h-[180px] bg-red-950 rounded-b-2xl z-0 shadow-2xl"></div>
+                    
+                    <!-- La Carta (completamente oculta adentro para evitar que sobresalga) -->
+                    <div id="paper-letter" class="letter absolute bottom-2 left-4 right-4 bg-amber-50 text-gray-800 p-5 rounded-lg shadow-lg flex flex-col justify-between h-[210px]">
+                        <div class="text-center font-serif flex-grow flex flex-col justify-center px-1">
+                            <h2 class="text-lg font-bold text-red-600 mb-1">Para ti ✨</h2>
+                            <p id="lbl-msg" class="text-xs sm:text-sm text-gray-700 italic leading-relaxed max-h-[110px] overflow-y-auto px-1 font-semibold">
+                                "Este es tu espacio donde están tus 5 canciones favoritas. Así las tengas en cada momento. 💖"
+                            </p>
+                        </div>
+                        <div class="text-right border-t border-red-100 pt-1 mt-1">
+                            <p class="text-xs font-serif font-bold text-red-600">ATT: <span>Alex</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Cuerpo del Sobre (Frente) -->
+                    <div class="absolute bottom-0 left-0 w-full h-[180px] bg-red-900 rounded-b-2xl z-20 border-t border-red-800/50">
+                        <div class="absolute bottom-0 left-0 w-0 h-0 border-b-[180px] border-b-red-900/90 border-r-[160px] border-r-transparent rounded-bl-2xl"></div>
+                        <div class="absolute bottom-0 right-0 w-0 h-0 border-b-[180px] border-b-red-900/90 border-l-[160px] border-l-transparent rounded-br-2xl"></div>
+                    </div>
+
+                    <!-- Solapa Superior (Flap con clip-path) -->
+                    <div id="flap" class="absolute top-[40px] left-0 w-full h-[110px] bg-red-800 origin-top transition-transform duration-700 ease-in-out z-30" style="clip-path: polygon(0 0, 100% 0, 50% 100%);"></div>
+
+                    <!-- Sello de corazón interactivo -->
+                    <div id="wax-seal" class="absolute bottom-[50px] left-1/2 transform -translate-x-1/2 z-40 cursor-pointer flex flex-col items-center group transition-all duration-300">
+                        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-red-500 via-red-600 to-red-800 flex items-center justify-center shadow-lg border-2 border-red-400 pulse-heart transform group-hover:scale-110 transition-transform">
+                            <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </div>
+                        <span class="text-[9px] mt-1.5 font-bold tracking-widest text-white drop-shadow-md bg-black/50 px-2 py-0.5 rounded-full select-none uppercase">Abrir</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón para continuar -->
+            <button id="btn-goto-music" class="hidden mt-6 bg-gradient-to-r from-red-500 to-blue-600 hover:from-red-600 hover:to-blue-700 text-white font-semibold py-3.5 px-8 rounded-full shadow-lg hover:shadow-red-500/40 active:scale-95 transition-all z-20 flex items-center gap-2 tracking-wide text-sm animate-bounce">
+                Escuchar canciones juntos 💖
+            </button>
+        </div>
+
+        <!-- ================= PANTALLA 2: REPRODUCTOR Y KARAOKE ================= -->
+        <div id="player-screen" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center transition-all duration-1000 opacity-0 transform translate-y-8">
+            
+            <!-- Disco de Vinilo, Mandos y Lista de Canciones -->
+            <div class="lg:col-span-5 flex flex-col items-center bg-black/35 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                <div class="absolute top-3 right-3 flex items-center gap-1.5 bg-red-500/20 px-3 py-1 rounded-full border border-red-500/30">
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                    <span class="text-[10px] font-semibold text-red-200 uppercase tracking-widest">Top Favoritas</span>
+                </div>
+
+                <!-- Vinilo -->
+                <div class="relative w-48 h-48 sm:w-56 sm:h-56 my-4 select-none group">
+                    <div id="vinyl-aura" class="absolute inset-0 rounded-full bg-gradient-to-tr from-red-500/25 to-blue-500/25 blur-xl transition-all duration-1000 scale-95"></div>
+                    
+                    <div id="vinyl-disc" class="spinning paused-spin w-full h-full rounded-full bg-gradient-to-r from-red-600 via-red-800 to-black p-2 shadow-[0_0_40px_rgba(0,0,0,0.8)] relative border border-neutral-800 flex items-center justify-center cursor-pointer transition-all duration-700">
+                        <div class="absolute inset-4 rounded-full border border-neutral-800/40"></div>
+                        <div class="absolute inset-8 rounded-full border border-neutral-700/20"></div>
+                        <div class="absolute inset-12 rounded-full border border-neutral-800/50"></div>
+                        <div class="absolute inset-16 rounded-full border border-neutral-700/10"></div>
+                        
+                        <div id="vinyl-center" class="w-[42%] h-[42%] rounded-full bg-gradient-to-tr from-red-500 to-blue-600 overflow-hidden relative flex items-center justify-center border-2 border-neutral-900 transition-all duration-500">
+                            <span id="vinyl-emoji" class="text-3xl filter drop-shadow">🌹</span>
+                            <div class="absolute w-4 h-4 bg-neutral-950 rounded-full border border-white/10 shadow-inner"></div>
+                        </div>
+                    </div>
+
+                    <!-- Aguja del tocadiscos -->
+                    <div id="needle-arm" class="absolute -top-4 right-1 transform origin-top-right rotate-[-20deg] transition-transform duration-1000 w-14 h-32 pointer-events-none drop-shadow-xl z-20">
+                        <svg class="w-full h-full" viewBox="0 0 100 200" fill="none">
+                            <circle cx="80" cy="20" r="12" fill="#4b5563" />
+                            <circle cx="80" cy="20" r="6" fill="#9ca3af" />
+                            <path d="M80 20 L40 160 L28 175" stroke="#9ca3af" stroke-width="4" stroke-linecap="round" />
+                            <rect x="18" y="170" width="20" height="12" rx="2" transform="rotate(15 28 175)" fill="#374151" />
+                            <rect x="15" y="174" width="8" height="6" rx="1" transform="rotate(15 28 175)" fill="#ef4444" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Info de la canción -->
+                <div class="text-center w-full px-4 select-none">
+                    <h3 id="track-title" class="text-base sm:text-lg font-serif font-bold text-red-400 tracking-wide truncate">Lady</h3>
+                    <p id="track-artist" class="text-xs text-white/60 mt-0.5">El Paria</p>
+                </div>
+
+                <!-- Barra de Progreso -->
+                <div class="w-full px-2 mt-4">
+                    <div class="flex items-center justify-between text-[10px] text-gray-400 font-mono mb-1 select-none">
+                        <span id="time-current">0:00</span>
+                        <span id="time-total">0:00</span>
+                    </div>
+                    <div class="relative group cursor-pointer">
+                        <input type="range" id="progress-bar" min="0" max="100" value="0" class="w-full accent-red-500 bg-white/10 rounded-lg h-1.5 appearance-none cursor-pointer focus:outline-none focus:ring-0">
+                    </div>
+                </div>
+
+                <!-- Controles de Audio -->
+                <div class="flex items-center gap-5 mt-4">
+                    <button id="btn-rewind" class="p-2.5 rounded-full hover:bg-white/5 active:scale-95 text-gray-300 hover:text-white transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.334 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z" />
+                        </svg>
+                    </button>
+
+                    <button id="btn-play-pause" class="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-blue-600 hover:from-red-600 hover:to-blue-700 text-white flex items-center justify-center shadow-lg shadow-red-500/30 active:scale-95 transition-all border-2 border-white/20">
+                        <svg id="play-icon" class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                        <svg id="pause-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
+                    </button>
+
+                    <button id="btn-forward" class="p-2.5 rounded-full hover:bg-white/5 active:scale-95 text-gray-300 hover:text-white transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.934 12.8a1 1 0 000-1.6l-5.334-4A1 1 0 005 8v8a1 1 0 001.6.8l5.334-4zM19.934 12.8a1 1 0 000-1.6l-5.334-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.334-4z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Control de Volumen -->
+                <div class="flex items-center gap-2 w-full max-w-[180px] mt-4 px-4">
+                    <button id="btn-mute" class="text-gray-400 hover:text-white transition-colors">
+                        <svg id="volume-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        </svg>
+                        <svg id="mute-icon" class="w-3.5 h-3.5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6L4.5 9H3a1 1 0 00-1 1v4a1 1 0 001 1h1.5l3.75 3.75V5.25L7.5 9z" />
+                        </svg>
+                    </button>
+                    <input type="range" id="volume-bar" min="0" max="100" value="80" class="w-full accent-red-500 bg-white/10 rounded-lg h-1 appearance-none cursor-pointer focus:outline-none">
+                </div>
+
+                <!-- LISTA DE REPRODUCCIÓN (TOP 5) INTEGRADA -->
+                <div class="w-full mt-5 pt-4 border-t border-white/5">
+                    <p class="text-[10px] uppercase tracking-[0.15em] text-red-400/90 font-bold mb-2.5 px-1 select-none">Mi Top 5 de Canciones 💖</p>
+                    <div id="playlist-container" class="space-y-1.5 w-full max-h-[145px] overflow-y-auto pr-1">
+                        <!-- Generado Dinámicamente por JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Derecho: Letras Sincronizadas -->
+            <div class="lg:col-span-7 flex flex-col h-[450px] lg:h-[550px] bg-black/25 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-2xl relative">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/5 select-none">
+                    <span class="text-xs uppercase tracking-[0.2em] text-red-400 font-bold flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                        </svg>
+                        Letra Karaoke Sincronizada
+                    </span>
+                    <span class="text-[9px] text-gray-400 bg-white/5 px-2 py-0.5 rounded-full">Sincronización Interactiva</span>
+                </div>
+
+                <div class="lyrics-container flex-grow overflow-hidden relative">
+                    <div id="lyrics-window" class="lyrics-scroll overflow-y-auto h-full px-2 py-[150px] space-y-9 scroll-smooth">
+                        <!-- Las frases se generan mediante JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-6 px-6 z-10 select-none">
+        <p class="text-[10px] text-white/50 font-serif">Con todo mi cariño, por y para siempre 🌹</p>
+    </footer>
+
+    <!-- Elemento Audio Oculto -->
+    <audio id="audio-track" src="1Lady.mp3" preload="auto"></audio>
+
+
+    <script>
+        // BASE DE DATOS DE NUESTRA PLAYLIST EN EL ORDEN PERFECTO
+        const tracks = [
+            {
+                id: 0,
+                title: "Lady",
+                artist: "El Paria",
+                src: "1Lady.mp3",
+                emoji: "🌹",
+                color1: "#ef4444",
+                color2: "#7f1d1d",
+                lyrics: [
+    { start: 0.86, end: 11.09, kr: "🎵 (Intro Instrumental - El Paria) 🎵", rm: "", es: "" },
+    { start: 11.09, end: 13.34, kr: "Tan solo dime una cosa, chica hermosa...", rm: "", es: "Tan solo dime una cosa, chica hermosa..." },
+    { start: 13.34, end: 16.07, kr: "¿Alguna vez algún rufián te ha dedicado prosas?", rm: "", es: "¿Alguna vez algún rufián te ha dedicado prosas?" },
+    { start: 16.07, end: 19.18, kr: "O aunque sea una canción de esas de Sin Bandera...", rm: "", es: "O aunque sea una canción de esas de Sin Bandera..." },
+    { start: 19.18, end: 21.08, kr: "Que son muy parcas, pero que a todas desespera, espera...", rm: "", es: "Que son muy sencillas, pero que a todas encantan..." },
+    { start: 21.08, end: 23.51, kr: "Me tienes pendiente del celular de algún...", rm: "", es: "Me tienes al tanto esperando al teléfono..." },
+    { start: 23.51, end: 26.46, kr: "Mensaje nuevo que me haga pensar que quizás...", rm: "", es: "Un mensaje nuevo para ilusionarme con que..." },
+    { start: 26.46, end: 29.24, kr: "Sientas lo mismo que este iluso que, sin querer queriendo...", rm: "", es: "Sientes lo mismo que este tonto enamorado..." },
+    { start: 29.24, end: 32.06, kr: "De ti ha caído recluso...", rm: "", es: "Que ha caído prisionero de ti..." },
+    { start: 32.06, end: 34.32, kr: "Uso un lenguaje tranqui para que me entiendan...", rm: "", es: "Hablo de manera sencilla para expresarte todo..." },
+    { start: 34.32, end: 37.17, kr: "Porque yo sé que no amellan mucho lo de las jergas...", rm: "", es: "Porque sé que las palabras complicadas no valen..." },
+    { start: 37.17, end: 39.28, kr: "Juegas conmigo como si fuera un yoyo...", rm: "", es: "Juegas con mi mente de arriba a abajo..." },
+    { start: 39.28, end: 42.20, kr: "Qué sé yo, si solo veo lo bello de tu cuello...", rm: "", es: "Pero no me importa, solo puedo ver lo hermosa que eres..." },
+    { start: 42.20, end: 44.23, kr: "Me encantan tus ojos, me encanta tu pelo...", rm: "", es: "Me fascinan tus ojos y me fascina tu cabello..." },
+    { start: 44.23, end: 47.02, kr: "Me encanta como en el taxi me abrazaste, lo sentí sincero...", rm: "", es: "Aquel abrazo tan cálido y real..." },
+    { start: 47.02, end: 48.69, kr: "Ahora quiero que lo seas y me digas la firme...", rm: "", es: "Solo quiero que me hables con la verdad..." },
+    { start: 48.69, end: 52.41, kr: "Si conmigo quieres algo más que ir al cine...", rm: "", es: "Si estás lista para que escribamos nuestra historia..." },
+    { start: 52.41, end: 54.94, kr: "Desde que te vi en ti no he dejado de pensar...", rm: "", es: "Desde la primera vez que te vi, invades mi mente..." },
+    { start: 54.94, end: 57.28, kr: "En mi mente estás de aquí para allá...", rm: "", es: "Estás presente a cada segundo..." },
+    { start: 57.28, end: 58.39, kr: "De allá para acá...", rm: "", es: "A todas horas y en todo lugar..." },
+    { start: 58.39, end: 60.37, kr: "Ma', si te ibas esa noche y no te conocía...", rm: "", es: "Si te hubieras ido aquella noche sin despedirte..." },
+    { start: 60.37, end: 61.78, kr: "Por todo Guacho como loco yo te buscaría, Lady...", rm: "", es: "Te buscaría incansablemente por todas partes, mi Lady..." },
+    { start: 61.78, end: 65.63, kr: "Tan solo dame un chance...", rm: "", es: "Solo pido una oportunidad..." },
+    { start: 65.63, end: 68.22, kr: "No creo que todos mis versos alcancen...", rm: "", es: "Sé que mil palabras no bastarían..." },
+    { start: 68.22, end: 70.71, kr: "Para conquistar tu cora, tan solo dame una hora...", rm: "", es: "Para ganarme tu corazón, solo regálame un instante..." },
+    { start: 70.71, end: 152.21, kr: "Y te recito lo que nunca he escrito hasta ahora...", rm: "", es: "Y te diré las cosas más bellas del mundo..." }
+]
+            },
+            {
+                id: 1,
+                title: "Aquella Noche",
+                artist: "Bardero$",
+                src: "2AquellaNoche.mp3",
+                emoji: "🌙",
+                color1: "#3b82f6",
+                color2: "#1e3a8a",
+                lyrics: [
+    { start: 3.51, end: 24.93, kr: "🎵 (Instrumental Saxo Intro) 🎵", rm: "", es: "" },
+    { start: 24.93, end: 28.32, kr: "He estado pensando en ti...", rm: "", es: "He estado pensando en ti..." },
+    { start: 28.32, end: 31.29, kr: "Aún no he podido olvidarte...", rm: "", es: "Aún no he podido olvidarte..." },
+    { start: 31.29, end: 34.32, kr: "Sácame lejos de aquí...", rm: "", es: "Sácame lejos de aquí..." },
+    { start: 34.32, end: 36.84, kr: "Donde solo puedas amarme...", rm: "", es: "Donde solo puedas amarme..." },
+    { start: 36.84, end: 39.94, kr: "Sin fin, ya no puedo salir...", rm: "", es: "Atrapado en tu recuerdo, ya no puedo salir..." },
+    { start: 39.94, end: 44.23, kr: "Es que te veo en todas partes...", rm: "", es: "Es que te veo en todas partes..." },
+    { start: 44.23, end: 46.99, kr: "Como olvidar aquella noche...", rm: "", es: "¿Cómo olvidar aquella hermosa noche?" },
+    { start: 46.99, end: 50.18, kr: "Ya no me duelen las mentiras de una mente que no tiene solución...", rm: "", es: "Ya no importan los problemas sin solución..." },
+    { start: 50.18, end: 52.70, kr: "Solo busco algo de calma para mi pobre corazón...", rm: "", es: "Solo busco un poco de paz en mi corazón..." },
+    { start: 52.70, end: 55.63, kr: "Todavía siento tu aroma dentro de la habitación...", rm: "", es: "Tu fragancia sigue presente en mi habitación..." },
+    { start: 55.63, end: 58.41, kr: "Pero te has ido muy lejos para cumplir otra misión...", rm: "", es: "Pero estás lejos ahora cumpliendo otro destino..." },
+    { start: 58.41, end: 61.37, kr: "Yo sigo esperando que regreses para otro encuentro...", rm: "", es: "Sigo esperando el día en que volvamos a vernos..." },
+    { start: 61.37, end: 64.20, kr: "Porque ahora ya estoy renovado y ha pasado el tiempo...", rm: "", es: "Porque he crecido y el tiempo ha volado..." },
+    { start: 64.20, end: 67.08, kr: "Contigo compartí la lluvia, la arena y el viento...", rm: "", es: "Contigo compartí la lluvia, la arena y el viento..." },
+    { start: 67.08, end: 69.89, kr: "Y siempre guardo bien adentro todos esos momentos...", rm: "", es: "Y atesoro en mi alma cada segundo contigo..." },
+    { start: 69.89, end: 72.47, kr: "¿Cómo olvidar aquella noche en que nos despedimos?", rm: "", es: "¿Cómo olvidar esa noche cuando tuvimos que despedirnos?" },
+    { start: 72.47, end: 75.29, kr: "Solo la luna fue testigo de todo lo que hicimos...", rm: "", es: "La luna fue la única testigo de nuestro amor..." },
+    { start: 75.29, end: 77.92, kr: "Borro la tinta con mis lágrimas cuando te escribo...", rm: "", es: "Lloro al escribirte recordando todo..." },
+    { start: 77.92, end: 80.62, kr: "¿Será que no puedo evitarlo? Solo me lastimo...", rm: "", es: "¿Será que no puedo sacarte de mi mente?" },
+    { start: 80.62, end: 83.54, kr: "Mírame ahora, sigo acá esperando tu llegada...", rm: "", es: "Aquí me tienes, esperando pacientemente tu regreso..." },
+    { start: 83.54, end: 86.15, kr: "Llevo dos años sin dormir, se nota en mi mirada...", rm: "", es: "Llevo tiempo esperándote y se nota en mis ojos..." },
+    { start: 86.15, end: 88.96, kr: "¿Cómo olvidar aquella noche cuando me abrazabas...", rm: "", es: "¿Cómo olvidar cuando me abrazabas fuerte..." },
+    { start: 88.96, end: 92.54, kr: "Y susurrando me pedías que no te marcharas?", rm: "", es: "Y susurrabas pidiéndome que nunca me fuera?" },
+    { start: 92.54, end: 95.24, kr: "He estado pensando en ti...", rm: "", es: "He estado pensando en ti..." },
+    { start: 95.24, end: 97.44, kr: "Aún no he podido olvidarte...", rm: "", es: "Aún no he podido olvidarte..." },
+    { start: 97.44, end: 100.85, kr: "Sácame lejos de aquí...", rm: "", es: "Sácame lejos de aquí..." },
+    { start: 100.85, end: 190.02, kr: "Donde solo puedas amarme...", rm: "", es: "Donde solo puedas amarme..." }
+]
+            },
+            {
+                id: 2,
+                title: "Strangers",
+                artist: "Proderics & melodybloom",
+                src: "3ProdericsStrangers.mp3",
+                emoji: "🪐",
+                color1: "#f3f4f6",
+                color2: "#9ca3af",
+                lyrics: [
+    { start: 0.89, end: 15.19, kr: "🎵 (Dreamy Intro Synth) 🎵", rm: "", es: "" },
+    { start: 15.19, end: 18.68, kr: "And we became a stranger...", rm: "And we became a stranger", es: "Y nos convertimos en extraños..." },
+    { start: 18.68, end: 22.27, kr: "And never if you believe in me...", rm: "And never if you believe in me", es: "Y nunca creíste en lo nuestro..." },
+    { start: 22.27, end: 25.95, kr: "Then we became a danger...", rm: "Then we became a danger", es: "Entonces nos volvimos un peligro..." },
+    { start: 25.95, end: 29.29, kr: "I felt a whisper in the wind...", rm: "I felt a whisper in the wind", es: "Sentí un dulce susurro en el viento..." },
+    { start: 29.29, end: 31.20, kr: "I do anything just for you to be mine again...", rm: "I do anything just for you to be mine again", es: "Haría cualquier cosa para que vuelvas a ser mía..." },
+    { start: 31.20, end: 34.67, kr: "But now I have to live for you...", rm: "But now I have to live for you", es: "Pero ahora tengo que vivir únicamente para ti..." },
+    { start: 34.67, end: 40.38, kr: "I do anything just for me to see you again...", rm: "I do anything just for me to see you again", es: "Haría lo que fuera solo para volver a verte..." },
+    { start: 40.38, end: 44.69, kr: "I felt a whisper in the wind...", rm: "I felt a whisper in the wind", es: "Sentí un susurro en el viento..." },
+    { start: 44.69, end: 47.98, kr: "I do anything just for me to see you again...", rm: "I do anything just for me to see you again", es: "Haría cualquier cosa con tal de verte otra vez..." },
+    { start: 47.98, end: 51.33, kr: "I felt a whisper in the wind...", rm: "I felt a whisper in the wind", es: "Un susurro sutil que me habla de ti..." },
+    { start: 51.33, end: 54.77, kr: "I do anything just for you to be mine again...", rm: "I do anything just for you to be mine again", es: "Haría lo que sea para tenerte en mis brazos otra vez..." },
+    { start: 54.77, end: 58.72, kr: "I felt a whisper in the wind...", rm: "I felt a whisper in the wind", es: "El viento me trae tu recuerdo..." },
+    { start: 58.72, end: 62.21, kr: "And we became a stranger...", rm: "And we became a stranger", es: "Y nos convertimos en extraños..." },
+    { start: 62.21, end: 65.58, kr: "And never if you believe in me...", rm: "And never if you believe in me", es: "Y nunca si crees en mí..." },
+    { start: 65.58, end: 135.21, kr: "And we became a danger...", rm: "And we became a danger", es: "Entonces nos volvimos un peligro..." }
+]
+            },
+            {
+                id: 3,
+                title: "Cupid's Chokehold",
+                artist: "Gym Class Heroes",
+                src: "4Cupid.mp3",
+                emoji: "🏹",
+                color1: "#dc2626",
+                color2: "#450a0a",
+                lyrics: [
+    { start: 0.95, end: 6.81, kr: "🎵 (Ba-ba-da-da Intro) 🎵", rm: "", es: "" },
+    { start: 6.81, end: 12.32, kr: "Take a look at my girlfriend, she's the only one I got...", rm: "Take a look at my girlfriend", es: "Mira a mi chica, es la única que tengo..." },
+    { start: 12.32, end: 18.93, kr: "Not much of a girlfriend, I never seem to get a lot...", rm: "I never seem to get a lot", es: "No es una novia cualquiera, siempre me da todo su amor..." },
+    { start: 18.93, end: 21.57, kr: "It's been some time since we last spoke...", rm: "It's been some time", es: "Ha pasado algún tiempo desde que hablamos..." },
+    { start: 21.57, end: 24.01, kr: "This is gonna sound like a bad joke...", rm: "This is gonna sound like a bad joke", es: "Y esto va a sonar como un mal chiste..." },
+    { start: 24.01, end: 26.80, kr: "But mama, I fell in love again...", rm: "But mama, I fell in love again", es: "Pero mamá, me he vuelto a enamorar perdidamente..." },
+    { start: 26.80, end: 31.27, kr: "It's safe to say that I have a new girlfriend...", rm: "I have a new girlfriend", es: "Es seguro decir que tengo una maravillosa novia..." },
+    { start: 31.27, end: 36.76, kr: "And I know it sounds so old, but Cupid got me in a chokehold...", rm: "Cupid got me in a chokehold", es: "Y sé que suena trillado, pero Cupido me tiene atrapado..." },
+    { start: 36.76, end: 43.10, kr: "And I'm afraid I might give in, towels on the mat, my white flag is waving...", rm: "My white flag is waving", es: "Y me rindo ante sus encantos, agito mi bandera blanca..." },
+    { start: 43.10, end: 48.47, kr: "I mean, she even cooks me pancakes, and Alka-Seltzer when my tummy aches...", rm: "She even cooks me pancakes", es: "Incluso me prepara panqueques y me cuida cuando me enfermo..." },
+    { start: 48.47, end: 55.07, kr: "If that ain't love, then I don't know what love is...", rm: "If that ain't love", es: "Si eso no es amor, entonces no sé qué es..." },
+    { start: 55.07, end: 60.42, kr: "We even got a secret handshake, and she loves the music that my band makes...", rm: "We even got a secret handshake", es: "Tenemos nuestro saludo secreto y ama la música que hago..." },
+    { start: 60.42, end: 67.22, kr: "I know I'm young, but if I had to choose her or the sun, I'd be one nocturnal son of a gun...", rm: "Choose her or the sun", es: "Sé que soy joven, pero si tuviera que elegirla a ella o al sol, sería nocturno para siempre..." },
+    { start: 67.22, end: 70.06, kr: "Take a look at my girlfriend, she's the only one I got...", rm: "Take a look at my girlfriend", es: "¡Mira a mi chica! Ella es mi mundo entero..." },
+    { start: 70.06, end: 76.42, kr: "Not much of a girlfriend, I never seem to get a lot...", rm: "I never seem to get a lot", es: "Es mi mayor tesoro, lo es todo..." },
+    { start: 76.42, end: 81.04, kr: "Take a look at my girlfriend, she's the only one I got...", rm: "Take a look at my girlfriend", es: "Mira a mi chica, es la única para mí..." },
+    { start: 81.04, end: 91.83, kr: "Not much of a girlfriend, I never seem to get a lot...", rm: "I never seem to get a lot", es: "No la cambiaría por nada en este mundo..." },
+    { start: 91.83, end: 96.58, kr: "It's been a while since we talked last, and I'm trying hard not to talk fast...", rm: "I'm trying hard not to talk fast", es: "Ha pasado un tiempo y trato de no hablar muy rápido..." },
+    { start: 96.58, end: 99.75, kr: "But dad, I'm finally thinking I may have found the one...", rm: "I may have found the one", es: "Pero papá, finalmente creo que he encontrado a la indicadísima..." },
+    { start: 99.75, end: 104.30, kr: "Type of girl that'll make you way proud of your son...", rm: "Proud of your son", es: "El tipo de chica que te haría sentir orgulloso de tu hijo..." },
+    { start: 104.30, end: 108.92, kr: "And I know you heard the last song, about the girls that didn't last long...", rm: "Girls that didn't last long", es: "Y sé que escuchaste canciones de amores pasajeros del pasado..." },
+    { start: 108.92, end: 243.76, kr: "But I promise this is on a whole new plain, I can tell by the way she says my name...", rm: "The way she says my name", es: "Pero prometo que esto es real, puedo sentirlo cuando dice mi nombre..." }
+]
+            },
+            {
+                id: 4,
+                title: "I'm Missing You",
+                artist: "Sunjae",
+                src: "Sunjae_-_I_m_Missing_You_True_Beauty_OST_Part.4_(mp3.pm).mp3",
+                emoji: "✨",
+                color1: "#2563eb",
+                color2: "#172554",
+                lyrics: [
+                    { start: 0.83, end: 1.92, kr: "🎵 (Instrumental Intro) 🎵", rm: "", es: "" },
+                    { start: 1.92, end: 8.65, kr: "아직 모르고 있죠 그댄", rm: "ajik moreugo itjyo geudaen", es: "Todavía no te has de dar cuenta, ¿verdad?" },
+                    { start: 8.65, end: 14.13, kr: "얼마나 특별한지", rm: "eolmana teukbyeolhanji", es: "De lo sumamente especial que eres..." },
+                    { start: 14.13, end: 26.99, kr: "당신의 마음에 이런 내가 닿길 바래", rm: "dangsinui maeume ireon naega dahgil barae", es: "Espero que este sentimiento mío pueda llegar a tu corazón" },
+                    { start: 26.99, end: 33.05, kr: "조금 더 깊어져 가 내가", rm: "jogeum deo gipeojyeo ga naega", es: "Mis sentimientos por ti se vuelven cada vez más profundos..." },
+                    { start: 33.05, end: 42.64, kr: "그대와 함께 할 수 있도록", rm: "geudaewa hamkke hal su itdodorok", es: "Para que finalmente pueda estar junto a ti..." },
+                    { start: 42.64, end: 46.25, kr: "I'm missing you", rm: "I'm missing you", es: "Te extraño..." },
+                    { start: 46.25, end: 49.86, kr: "Waiting for you", rm: "Waiting for you", es: "Te sigo esperando..." },
+                    { start: 49.86, end: 57.39, kr: "내 마음이 그대를 향해 있는걸요", rm: "nae maeumi geudaereul hyanghae inneungeoryo", es: "Porque mi corazón late únicamente por ti..." },
+                    { start: 57.39, end: 60.90, kr: "I'm missing you", rm: "I'm missing you", es: "Te extraño..." },
+                    { start: 60.90, end: 65.63, kr: "Waiting for you", rm: "Waiting for you", es: "Te sigo esperando..." },
+                    { start: 65.63, end: 74.35, kr: "그대 오늘도 기다려요", rm: "geudae oneuldo gidaryeoyo", es: "Hoy también me quedaré esperándote..." },
+                    { start: 74.35, end: 80.21, kr: "고민이 많아져요 이제", rm: "gomini manajyeoyo ije", es: "Mis pensamientos se llenan de ti y me confundo..." },
+                    { start: 80.21, end: 90.28, kr: "하루 온종일 그대 생각만 하는 나", rm: "haru onjongil geudae saenggakman haneun na", es: "Yo, que paso todo el día pensando solo en ti..." },
+                    { start: 90.28, end: 93.65, kr: "I'm missing you", rm: "I'm missing you", es: "Te extraño..." },
+                    { start: 93.65, end: 97.32, kr: "Waiting for you", rm: "Waiting for you", es: "Te sigo esperando..." },
+                    { start: 97.32, end: 104.56, kr: "내 마음이 그대를 향해 있는걸요", rm: "nae maeumi geudaereul hyanghae inneungeoryo", es: "Porque mi corazón late únicamente por ti..." },
+                    { start: 104.56, end: 108.14, kr: "I'm missing you", rm: "I'm missing you", es: "Te extraño..." },
+                    { start: 108.14, end: 112.10, kr: "Waiting for you", rm: "Waiting for you", es: "Te sigo esperando..." },
+                    { start: 112.10, end: 120.83, kr: "그대 오늘도 기다려요", rm: "geudae oneuldo gidaryeoyo", es: "Hoy también me quedaré esperándote..." },
+                    { start: 120.83, end: 127.34, kr: "언제나 내 곁을 지켜주었던 그대", rm: "eonjena nae gyeoteul jikyeojueotdeon geudae", es: "Tú, que siempre estuviste ahí cuidando de mí..." },
+                    { start: 127.34, end: 137.72, kr: "놓치고 싶지 않아요 정말", rm: "nochigo sipji anayo jeongmal", es: "Realmente no quiero perderte jamás..." },
+                    { start: 137.72, end: 140.82, kr: "I'm missing you", rm: "I'm missing you", es: "Te extraño..." },
+                    { start: 140.82, end: 144.27, kr: "Waiting for you", rm: "Waiting for you", es: "Te sigo esperando..." },
+                    { start: 144.27, end: 151.99, kr: "내 마음이 그대를 향해 있는걸요", rm: "nae maeumi geudaereul hyanghae inneungeoryo", es: "Porque mi corazón late únicamente por ti..." },
+                    { start: 151.99, end: 155.25, kr: "I'm missing you", rm: "I'm missing you", es: "Te extraño..." },
+                    { start: 155.25, end: 159.03, kr: "Waiting for you", rm: "Waiting for you", es: "Te sigo esperando..." },
+                    { start: 159.03, end: 161.66, kr: "그대 오늘도...", rm: "geudae oneuldo...", es: "Hoy también tú..." },
+                    { start: 161.66, end: 164.29, kr: "...기다려요", rm: "...gidaryeoyo", es: "...te espero" },
+                    { start: 164.29, end: 182.30, kr: "그대 오늘도 기다려요 🎵", rm: "geudae oneuldo gidaryeoyo 🎵", es: "Hoy también te espero con todo mi amor 🎵" }
+                ]
+            }
+        ];
+
+        // VARIABLES DE ESTADO DEL REPRODUCTOR
+        let currentTrackIndex = 0;
+        let lyricsData = tracks[currentTrackIndex].lyrics;
+        let isSeeking = false;
+        let isLoopRunning = false;
+        let activeLineIndex = -1;
+
+        // REFERENCIAS DEL DOM
+        const letterScreen = document.getElementById('letter-screen');
+        const playerScreen = document.getElementById('player-screen');
+        const waxSeal = document.getElementById('wax-seal');
+        const hintText = document.getElementById('hint-text');
+        const btnGotoMusic = document.getElementById('btn-goto-music');
+        
+        const audioTrack = document.getElementById('audio-track');
+        const btnPlayPause = document.getElementById('btn-play-pause');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const progressBar = document.getElementById('progress-bar');
+        const timeCurrent = document.getElementById('time-current');
+        const timeTotal = document.getElementById('time-total');
+        const volumeBar = document.getElementById('volume-bar');
+        const btnMute = document.getElementById('btn-mute');
+        const volumeIcon = document.getElementById('volume-icon');
+        const muteIcon = document.getElementById('mute-icon');
+        
+        const vinylDisc = document.getElementById('vinyl-disc');
+        const vinylCenter = document.getElementById('vinyl-center');
+        const vinylEmoji = document.getElementById('vinyl-emoji');
+        const needleArm = document.getElementById('needle-arm');
+        const vinylAura = document.getElementById('vinyl-aura');
+        const lyricsWindow = document.getElementById('lyrics-window');
+        const playlistContainer = document.getElementById('playlist-container');
+
+        // BOTONES DE RETROCESO Y AVANCE
+        const btnRewind = document.getElementById('btn-rewind');
+        const btnForward = document.getElementById('btn-forward');
+
+        // INICIALIZACIÓN DE VOLUMEN
+        audioTrack.volume = 0.8;
+
+        // EVENTOS DE APERTURA DEL SOBRE
+        waxSeal.addEventListener('click', () => {
+            const envContainer = document.getElementById('envelope-container');
+            
+            envContainer.classList.add('open');
+            waxSeal.style.opacity = '0';
+            waxSeal.style.pointerEvents = 'none';
+            hintText.style.opacity = '0';
+
+            // Precarga de todos los audios de forma segura
+            audioTrack.load();
+
+            setTimeout(() => {
+                btnGotoMusic.classList.remove('hidden');
+                btnGotoMusic.classList.add('flex');
+            }, 1300);
+        });
+
+        // Transición hacia el reproductor
+        btnGotoMusic.addEventListener('click', () => {
+            letterScreen.classList.add('opacity-0');
+            setTimeout(() => {
+                letterScreen.classList.add('hidden');
+                playerScreen.classList.remove('hidden');
+                playerScreen.clientHeight; // Forzar renderizado
+                playerScreen.classList.remove('opacity-0', 'translate-y-8');
+                
+                // Cargar pista inicial (Track 0: Lady)
+                loadTrack(0, true);
+            }, 800);
+        });
+
+        // CARGAR CANCIÓN DINÁMICAMENTE
+        function loadTrack(index, autoplay = false) {
+            currentTrackIndex = index;
+            const track = tracks[index];
+            
+            audioTrack.src = track.src;
+            audioTrack.load();
+
+            // Actualizar interfaz principal
+            document.getElementById('track-title').textContent = track.title;
+            document.getElementById('track-artist').textContent = track.artist;
+            vinylEmoji.textContent = track.emoji;
+            
+            // Actualizar colores del disco
+            vinylDisc.style.background = `radial-gradient(circle, ${track.color1} 0%, ${track.color2} 100%)`;
+            vinylCenter.style.background = `gradient(to tr, ${track.color1}, ${track.color2})`;
+
+            // Resetear barra de progreso y tiempos
+            progressBar.value = 0;
+            timeCurrent.textContent = "0:00";
+            timeTotal.textContent = "0:00";
+
+            // Cargar datos de letra
+            lyricsData = track.lyrics;
+            activeLineIndex = -1;
+            initKaraoke();
+            updatePlaylistUI();
+
+            if (autoplay) {
+                // Pequeño retardo para asegurar la carga en dispositivos móviles
+                setTimeout(() => {
+                    playAudio();
+                }, 150);
+            } else {
+                pauseAudio();
+            }
+        }
+
+        // GENERAR VISTAS DE PLAYLIST CON EFECTOS DE SELECCIÓN
+        function renderPlaylist() {
+            playlistContainer.innerHTML = '';
+            tracks.forEach((track, index) => {
+                const item = document.createElement('div');
+                item.className = `playlist-item flex items-center justify-between p-2 rounded-xl cursor-pointer hover:bg-white/10 active:scale-[0.98] transition-all duration-300 border border-transparent`;
+                item.id = `playlist-item-${index}`;
+                
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-bold text-red-400 select-none bg-red-500/10 w-6 h-6 flex items-center justify-center rounded-full">${index + 1}</span>
+                        <div class="text-left">
+                            <p class="text-xs font-bold text-white tracking-wide truncate max-w-[150px] sm:max-w-[180px]">${track.title}</p>
+                            <p class="text-[9px] text-white/50 truncate max-w-[150px] sm:max-w-[180px]">${track.artist}</p>
+                        </div>
+                    </div>
+                    <!-- Ecualizador gráfico decorativo para pista activa -->
+                    <div id="eq-${index}" class="hidden flex items-end gap-[2px] h-4 pr-1">
+                        <div class="w-[2.5px] h-1.5 bg-blue-400 rounded-full eq-bar-1"></div>
+                        <div class="w-[2.5px] h-3 bg-red-400 rounded-full eq-bar-2"></div>
+                        <div class="w-[2.5px] h-2.5 bg-blue-400 rounded-full eq-bar-3"></div>
+                    </div>
+                `;
+
+                item.addEventListener('click', () => {
+                    if (currentTrackIndex !== index) {
+                        loadTrack(index, true);
+                        spawnBurstHeartsAt(item);
+                    } else {
+                        // Si hace click en la actual, alterna play/pause
+                        if (audioTrack.paused) {
+                            playAudio();
+                        } else {
+                            pauseAudio();
+                        }
+                    }
+                });
+
+                playlistContainer.appendChild(item);
+            });
+        }
+
+        // ACTUALIZAR INTERFAZ DE PLAYLIST (Resaltado del elemento activo)
+        function updatePlaylistUI() {
+            tracks.forEach((_, index) => {
+                const item = document.getElementById(`playlist-item-${index}`);
+                const eq = document.getElementById(`eq-${index}`);
+                
+                if (item) {
+                    if (index === currentTrackIndex) {
+                        item.classList.add('bg-red-500/15', 'border-red-500/30', 'shadow-[0_0_15px_rgba(220,38,38,0.2)]');
+                        if (eq && !audioTrack.paused) {
+                            eq.classList.remove('hidden');
+                        }
+                    } else {
+                        item.classList.remove('bg-red-500/15', 'border-red-500/30', 'shadow-[0_0_15px_rgba(220,38,38,0.2)]');
+                        if (eq) {
+                            eq.classList.add('hidden');
+                        }
+                    }
+                }
+            });
+        }
+
+        // Inicializar render de playlist
+        renderPlaylist();
+
+        // CONTROL DE REPRODUCCIÓN GENERAL
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function startLoop() {
+            if (!isLoopRunning) {
+                isLoopRunning = true;
+                tick();
+            }
+        }
+
+        function stopLoop() {
+            isLoopRunning = false;
+        }
+
+        function tick() {
+            if (!isLoopRunning) return;
+            updateKaraokeAndPainting(audioTrack.currentTime);
+            requestAnimationFrame(tick);
+        }
+
+        function playAudio() {
+            audioTrack.play()
+                .then(() => {
+                    playIcon.classList.add('hidden');
+                    pauseIcon.classList.remove('hidden');
+                    vinylDisc.classList.remove('paused-spin');
+                    needleArm.style.transform = 'rotate(15deg)'; 
+                    vinylAura.classList.remove('scale-95');
+                    vinylAura.classList.add('scale-105', 'opacity-100');
+                    startLoop();
+                    updatePlaylistUI();
+                })
+                .catch((e) => {
+                    console.log("Error de autoplay:", e);
+                });
+        }
+
+        function pauseAudio() {
+            audioTrack.pause();
+            playIcon.classList.remove('hidden');
+            pauseIcon.classList.add('hidden');
+            vinylDisc.classList.add('paused-spin');
+            needleArm.style.transform = 'rotate(-20deg)'; 
+            vinylAura.classList.remove('scale-105', 'opacity-100');
+            vinylAura.classList.add('scale-95');
+            stopLoop();
+            updatePlaylistUI();
+        }
+
+        btnPlayPause.addEventListener('click', () => {
+            if (audioTrack.paused) {
+                playAudio();
+            } else {
+                pauseAudio();
+            }
+        });
+
+        vinylDisc.addEventListener('click', () => {
+            if (audioTrack.paused) {
+                playAudio();
+            } else {
+                pauseAudio();
+            }
+        });
+
+        // BOTONES DE AVANCE Y RETROCESO
+        btnRewind.addEventListener('click', () => {
+            let prevIndex = currentTrackIndex - 1;
+            if (prevIndex < 0) prevIndex = tracks.length - 1;
+            loadTrack(prevIndex, true);
+        });
+
+        btnForward.addEventListener('click', () => {
+            let nextIndex = currentTrackIndex + 1;
+            if (nextIndex >= tracks.length) nextIndex = 0;
+            loadTrack(nextIndex, true);
+        });
+
+        // Avanzar automáticamente cuando se termine de reproducir la canción actual
+        audioTrack.addEventListener('ended', () => {
+            let nextIndex = currentTrackIndex + 1;
+            if (nextIndex >= tracks.length) nextIndex = 0;
+            loadTrack(nextIndex, true);
+        });
+
+        audioTrack.addEventListener('timeupdate', () => {
+            if (!isSeeking) {
+                const pct = (audioTrack.currentTime / audioTrack.duration) * 100;
+                progressBar.value = pct || 0;
+            }
+            timeCurrent.textContent = formatTime(audioTrack.currentTime);
+            if (audioTrack.duration) {
+                timeTotal.textContent = formatTime(audioTrack.duration);
+            }
+        });
+
+        progressBar.addEventListener('input', () => {
+            isSeeking = true;
+        });
+
+        progressBar.addEventListener('change', () => {
+            const newTime = (progressBar.value / 100) * audioTrack.duration;
+            audioTrack.currentTime = newTime;
+            isSeeking = false;
+            updateKaraokeAndPainting(newTime);
+        });
+
+        volumeBar.addEventListener('input', () => {
+            audioTrack.volume = volumeBar.value / 100;
+            if (audioTrack.volume === 0) {
+                muteAudio();
+            } else {
+                unmuteAudio();
+            }
+        });
+
+        function muteAudio() {
+            audioTrack.muted = true;
+            volumeIcon.classList.add('hidden');
+            muteIcon.classList.remove('hidden');
+        }
+
+        function unmuteAudio() {
+            audioTrack.muted = false;
+            volumeIcon.classList.remove('hidden');
+            muteIcon.classList.add('hidden');
+        }
+
+        btnMute.addEventListener('click', () => {
+            if (audioTrack.muted) {
+                unmuteAudio();
+            } else {
+                muteAudio();
+            }
+        });
+
+        // GENERADOR DE ELEMENTOS KARAOKE DE DOBLE CAPA DINÁMICOS
+        function initKaraoke() {
+            lyricsWindow.innerHTML = '';
+            lyricsData.forEach((line, index) => {
+                const lineDiv = document.createElement('div');
+                lineDiv.id = `lyric-${index}`;
+                lineDiv.className = `lyric-line cursor-pointer text-center py-5 px-4 rounded-2xl border border-transparent hover:bg-white/5 active:scale-[0.99] transition-all duration-300`;
+                
+                const isInstrumental = line.kr.includes('🎵');
+                
+                if (isInstrumental) {
+                    lineDiv.innerHTML = `
+                        <p class="font-korean text-xl sm:text-2xl font-bold text-red-400 select-none">${line.kr}</p>
+                    `;
+                } else {
+                    lineDiv.innerHTML = `
+                        <!-- Único elemento de Texto Principal (Original) -->
+                        <p class="${currentTrackIndex === 4 ? 'font-korean' : ''} text-lg sm:text-2xl font-bold mb-1">
+                            <span class="paint-text" id="kr-${index}">${line.kr}</span>
+                        </p>
+                        <!-- Único elemento de Romanización (si está presente) -->
+                        ${line.rm ? `
+                        <p class="text-[11px] sm:text-xs italic mt-0.5 font-serif tracking-wider mb-1">
+                            <span class="paint-text-rm" id="rm-${index}">${line.rm}</span>
+                        </p>` : ''}
+                        <!-- Único elemento de Español (Traducción) -->
+                        ${line.es ? `
+                        <p class="text-xs sm:text-base font-semibold mt-1">
+                            <span class="paint-text-es" id="es-${index}">${line.es}</span>
+                        </p>` : ''}
+                    `;
+                }
+
+                // Salto directo a la marca de tiempo de la línea de karaoke seleccionada
+                lineDiv.addEventListener('click', () => {
+                    audioTrack.currentTime = line.start;
+                    playAudio();
+                    spawnBurstHeartsAt(lineDiv);
+                });
+
+                lyricsWindow.appendChild(lineDiv);
+            });
+        }
+
+        // SISTEMA DE SINCRONIZACIÓN Y PINTADO GRADUAL FLUIDO (60 FPS)
+        function updateKaraokeAndPainting(currentTime) {
+            let currentLineIndex = -1;
+            
+            for (let i = 0; i < lyricsData.length; i++) {
+                if (currentTime >= lyricsData[i].start && (i === lyricsData.length - 1 || currentTime < lyricsData[i + 1].start)) {
+                    currentLineIndex = i;
+                    break;
+                }
+            }
+
+            if (currentLineIndex !== -1) {
+                if (currentLineIndex !== activeLineIndex) {
+                    if (activeLineIndex !== -1) {
+                        const prevEl = document.getElementById(`lyric-${activeLineIndex}`);
+                        if (prevEl) {
+                            prevEl.classList.remove('active');
+                            setPaintingProgress(activeLineIndex, '100%');
+                        }
+                    }
+
+                    activeLineIndex = currentLineIndex;
+                    const activeEl = document.getElementById(`lyric-${activeLineIndex}`);
+                    if (activeEl) {
+                        activeEl.classList.add('active');
+                        
+                        activeEl.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+
+                        if (!lyricsData[activeLineIndex].kr.includes('🎵')) {
+                            spawnHeartFromVinyl();
+                        }
+                    }
+                }
+
+                const line = lyricsData[currentLineIndex];
+                const duration = line.end - line.start;
+                const elapsed = currentTime - line.start;
+                let percent = 0;
+                if (duration > 0) {
+                    percent = (elapsed / duration) * 100;
+                }
+                if (percent < 0) percent = 0;
+                if (percent > 100) percent = 100;
+
+                setPaintingProgress(currentLineIndex, `${percent}%`);
+
+                for (let i = 0; i < currentLineIndex; i++) {
+                    setPaintingProgress(i, '100%');
+                }
+                for (let i = currentLineIndex + 1; i < lyricsData.length; i++) {
+                    setPaintingProgress(i, '0%');
+                }
+            }
+        }
+
+        function setPaintingProgress(index, value) {
+            const krSpan = document.getElementById(`kr-${index}`);
+            const rmSpan = document.getElementById(`rm-${index}`);
+            const esSpan = document.getElementById(`es-${index}`);
+            
+            if (krSpan) krSpan.style.setProperty('--paint-progress', value);
+            if (rmSpan) rmSpan.style.setProperty('--paint-progress', value);
+            if (esSpan) esSpan.style.setProperty('--paint-progress', value);
+        }
+
+        // CANVAS DE CORAZONES FLOTANTES
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y, isExplosion = false) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * (isExplosion ? 10 : 18) + 5;
+                this.speedX = isExplosion ? (Math.random() - 0.5) * 6 : (Math.random() - 0.5) * 1.5;
+                this.speedY = isExplosion ? (Math.random() - 0.5) * 6 : -Math.random() * 1.5 - 0.5;
+                this.color = `hsla(${340 + Math.random() * 20}, 95%, 65%, ${Math.random() * 0.4 + 0.3})`;
+                this.isExplosion = isExplosion;
+                this.life = 1;
+                this.decay = Math.random() * 0.02 + 0.01;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.beginPath();
+                ctx.scale(this.size / 10, this.size / 10);
+                
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(-5, -5, -10, -2, -10, 3);
+                ctx.bezierCurveTo(-10, 8, -5, 12, 0, 17);
+                ctx.bezierCurveTo(5, 12, 10, 8, 10, 3);
+                ctx.bezierCurveTo(10, -2, 5, -5, 0, 0);
+
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = this.isExplosion ? 10 : 4;
+                ctx.shadowColor = 'rgba(220, 38, 38, 0.5)';
+                ctx.globalAlpha = this.isExplosion ? this.life : 0.8;
+                ctx.fill();
+                ctx.restore();
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                if (this.isExplosion) {
+                    this.life -= this.decay;
+                } else {
+                    this.speedX += Math.sin(Date.now() / 1000 + this.size) * 0.01;
+                }
+            }
+        }
+
+        function handleParticles() {
+            if (particles.length < 50 && Math.random() < 0.05) {
+                particles.push(new Particle(Math.random() * canvas.width, canvas.height + 20, false));
+            }
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                if (particles[i].y < -30 || (particles[i].isExplosion && particles[i].life <= 0)) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        window.addEventListener('click', (e) => {
+            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('#wax-seal')) return;
+            for (let i = 0; i < 12; i++) {
+                particles.push(new Particle(e.clientX, e.clientY, true));
+            }
+        });
+
+        window.addEventListener('touchstart', (e) => {
+            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('#wax-seal')) return;
+            const touch = e.touches[0];
+            for (let i = 0; i < 12; i++) {
+                particles.push(new Particle(touch.clientX, touch.clientY, true));
+            }
+        });
+
+        function spawnBurstHeartsAt(element) {
+            const rect = element.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            for (let i = 0; i < 8; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        function spawnHeartFromVinyl() {
+            const rect = vinylDisc.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            for (let i = 0; i < 4; i++) {
+                const p = new Particle(x, y, true);
+                p.speedY = -Math.random() * 3 - 2; 
+                particles.push(p);
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            handleParticles();
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = function () {
+            animate();
+        }
+    </script>
+</body>
+</html>
